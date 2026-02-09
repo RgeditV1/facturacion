@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from modulos.ventas import Ventas
+from modulos.UI_ventas import Ventas
 
 class MainWindow(ctk.CTk):
     def __init__(self):
@@ -22,29 +22,37 @@ class MainWindow(ctk.CTk):
         self.pestañas = {}
         self.botones = {}
         self.boton_activo = None
+        
+        # Lista de tuplas: (nombre, módulo/clase o None)
+        pestañas_config = [
+            ("Ventas", Ventas),
+            ("Inventario", None),  # Cambiar None por tu clase cuando la tengas
+            ("Productos", None),
+            ("Corte", None),
+            ("Reportes", None),
+            ("Configuracion", None),
+            ("Salir", None)
+        ]
 
-        nombres = (
-            "Ventas", "Inventario", "Productos",
-            "Corte", "Reportes", "Configuracion", "Salir"
-        )
-
-        for nombre in nombres:
+        # Crear botones y frames dinámicamente
+        for nombre, modulo_clase in pestañas_config:
             btn = ctk.CTkButton(
                 menu_frame,
                 text=nombre,
                 command=lambda n=nombre: self.mostrar_pestaña(n)
             )
             btn.pack(pady=10, padx=10, fill="x")
-
             self.botones[nombre] = btn
 
+            # Crear frame para la pestaña
             frame = ctk.CTkFrame(content_frame)
             self.pestañas[nombre] = frame
+            
+            # Instanciar el módulo si existe
+            if modulo_clase is not None and nombre != "Salir":
+                modulo_clase(frame)
 
         self.mostrar_pestaña("Ventas")
-        
-        #Crando las pestañas
-        Ventas(self.pestañas["Ventas"])
 
     def mostrar_pestaña(self, nombre):
         if nombre == "Salir":
