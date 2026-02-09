@@ -17,7 +17,7 @@ Desarrollar un POS de escritorio que permita:
 
 ---
 ![Ventas](src/app/imgs/ejemplo.png)
-
+---
 ## Estructura del proyecto
 
 ```text
