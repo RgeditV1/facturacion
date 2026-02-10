@@ -1,6 +1,6 @@
 import customtkinter as ctk
 
-class Ventas:
+class UIVentas:
     def __init__(self, frame):
         self.frame = frame
         self.draw_ui()

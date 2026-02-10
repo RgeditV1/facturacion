@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from modulos.UI_ventas import Ventas
+from modulos.UI_ventas import UIVentas
 
 class MainWindow(ctk.CTk):
     def __init__(self):
@@ -25,7 +25,7 @@ class MainWindow(ctk.CTk):
         
         # Lista de tuplas: (nombre, módulo/clase o None)
         pestañas_config = [
-            ("Ventas", Ventas),
+            ("Ventas", UIVentas),
             ("Inventario", None),  # Cambiar None por tu clase cuando la tengas
             ("Productos", None),
             ("Corte", None),
@@ -53,6 +53,18 @@ class MainWindow(ctk.CTk):
                 modulo_clase(frame)
 
         self.mostrar_pestaña("Ventas")
+
+
+        #Switch modo Oscuro
+        switch = ctk.CTkSwitch(menu_frame, text="🌙 Modo Oscuro", command=self.toggle_dark_mode)
+        switch.pack(side="bottom", pady=10, padx=10)
+
+
+    def toggle_dark_mode(self):
+        if ctk.get_appearance_mode() == "Dark":
+            ctk.set_appearance_mode("Light")
+        else:
+            ctk.set_appearance_mode("Dark")
 
     def mostrar_pestaña(self, nombre):
         if nombre == "Salir":
