@@ -20,7 +20,7 @@ class UIInventario:
 
     def buscar_producto(self, event=None):
         query = self.entry_busqueda.get().strip()
-        if not query:
+        if not query: #query == ""
             self.show_warning("Barra de busqueda vacia")
             return
         for item in self.tabla.get_children():
@@ -39,17 +39,30 @@ class UIInventario:
         if not producto_id or not nombre:
             self.show_warning("Debe ingresar un nombre e ID")
             return
-        if not cantidad.isdigit() or not precio.replace('.', '', 1).isdigit():
-            self.show_warning("La cantidad y Precio deben ser Numeros")
+        if not cantidad.isdigit():
+            self.show_warning("La cantidad debe ser un número")
             return
 
-        self.inventario.agregar_producto(producto_id, nombre, int(cantidad), float(precio))
+        # Si el producto ya existe en inventario y tiene precio, lo usamos
+        if producto_id in self.inventario.productos and precio.strip() == "":
+            precio_final = self.inventario.productos[producto_id]["precio"]
+        else:
+            precio_final = float(precio)
+            if not precio.replace('.', '', 1).isdigit():
+                self.show_warning("Debe ingresar un precio válido para productos nuevos")
+                return
+            precio_final = float(precio)
+
+        # Guardar en inventario
+        self.inventario.agregar_producto(producto_id, nombre, int(cantidad), precio_final)
         self.actualizar_tabla()
 
-        self.entry_cantidad.delete(0, "end")
+        # Limpiar los entrys después de agregar
         self.entry_id.delete(0, "end")
         self.entry_nombre.delete(0, "end")
+        self.entry_cantidad.delete(0, "end")
         self.entry_precio.delete(0, "end")
+
 
     def borrar_producto(self, event=None):
         seleccion = self.tabla.selection()
@@ -73,38 +86,48 @@ class UIInventario:
         form_frame = ctk.CTkFrame(self.main_frame)
         form_frame.pack(fill="x", padx=10, pady=10)
 
-        # Entradas en grid
-        ctk.CTkLabel(form_frame, text="ID").grid(row=0, column=0, padx=1, pady=5, sticky="e")
+        # ID
+        ctk.CTkLabel(form_frame, text="ID").grid(row=0, column=0, padx=(0,5), pady=5, sticky="e")
         self.entry_id = ctk.CTkEntry(form_frame, width=120)
-        self.entry_id.grid(row=0, column=1, padx=(2,5), pady=5, sticky="w")
+        self.entry_id.grid(row=0, column=1, padx=(0,10), pady=5, sticky="w")
 
-        ctk.CTkLabel(form_frame, text="Nombre").grid(row=0, column=2, padx=1, pady=5, sticky="e")
-        self.entry_nombre = ctk.CTkEntry(form_frame, width=120)
-        self.entry_nombre.grid(row=0, column=3, padx=(2,5), pady=5, sticky="w")
+        # Nombre (más ancho)
+        ctk.CTkLabel(form_frame, text="Nombre").grid(row=0, column=2, padx=(0,5), pady=5, sticky="e")
+        self.entry_nombre = ctk.CTkEntry(form_frame, width=300)   # ✅ más ancho
+        self.entry_nombre.grid(row=0, column=3, padx=(0,10), pady=5, sticky="w")
 
-        ctk.CTkLabel(form_frame, text="Cantidad").grid(row=1, column=0, padx=1, pady=5, sticky="e")
+        # Cantidad
+        ctk.CTkLabel(form_frame, text="Cantidad").grid(row=1, column=0, padx=(0,5), pady=5, sticky="e")
         self.entry_cantidad = ctk.CTkEntry(form_frame, width=120)
-        self.entry_cantidad.grid(row=1, column=1, padx=(2,5), pady=5, sticky="w")
+        self.entry_cantidad.grid(row=1, column=1, padx=(0,10), pady=5, sticky="w")
 
-        ctk.CTkLabel(form_frame, text="Precio").grid(row=1, column=2, padx=1, pady=5, sticky="e")
+        # Precio
+        ctk.CTkLabel(form_frame, text="Precio").grid(row=1, column=2, padx=(0,5), pady=5, sticky="e")
         self.entry_precio = ctk.CTkEntry(form_frame, width=120)
-        self.entry_precio.grid(row=1, column=3, padx=(2,5), pady=5, sticky="w")
+        self.entry_precio.grid(row=1, column=3, padx=(0,10), pady=5, sticky="w")
 
         # Barra de búsqueda
         self.entry_busqueda = ctk.CTkEntry(form_frame, placeholder_text="Buscar por ID o Nombre", width=250)
-        self.entry_busqueda.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+        self.entry_busqueda.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="w")
         self.entry_busqueda.bind("<Return>", self.buscar_producto)
+        
+        # Frame para los botones
+        buttons_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
+        buttons_frame.grid(row=2, column=2, columnspan=2, padx=5, pady=5, sticky="w")
 
-        # Botones
+        # Botón Buscar
+        self.btn_buscar = ctk.CTkButton(buttons_frame, text="Buscar", command=self.buscar_producto, width=80)
+        self.btn_buscar.pack(side="left", padx=5)
 
-        self.btn_buscar = ctk.CTkButton(form_frame, text="Buscar", command=self.buscar_producto)
-        self.btn_buscar.grid(row=2, column=2, padx=5, pady=5)
+        # Botón Agregar
+        self.btn_agregar = ctk.CTkButton(buttons_frame, text="Agregar", command=self.agregar_producto, width=80)
+        self.btn_agregar.pack(side="left", padx=5)
 
-        self.btn_agregar = ctk.CTkButton(form_frame, text="Agregar", command=self.agregar_producto)
-        self.btn_agregar.grid(row=2, column=3, padx=5, pady=5)
+        # Botón Borrar
+        self.btn_borrar = ctk.CTkButton(buttons_frame, text="Borrar", command=self.borrar_producto, width=80)
+        self.btn_borrar.pack(side="left", padx=5)
 
-        self.btn_borrar = ctk.CTkButton(form_frame, text="Borrar", command=self.borrar_producto)
-        self.btn_borrar.grid(row=2, column=4, padx=5, pady=5)
+
 
     def crear_tabla(self):
         columnas = ("ID", "Descripción", "Cantidad", "Precio")
@@ -123,7 +146,9 @@ class UIInventario:
         for item in self.tabla.get_children():
             self.tabla.delete(item)
         for producto_id, datos in self.inventario.productos.items():
-            self.tabla.insert("", "end", values=(producto_id, datos['nombre'], datos['cantidad'], datos['precio']))
+            cantidad_fmt = f"{datos['cantidad']:,}"          # separador de miles
+            precio_fmt = f"{datos['precio']:,.2f}"           # separador de miles y 2 decimales
+            self.tabla.insert("", "end", values=(producto_id, datos['nombre'], cantidad_fmt, precio_fmt))
 
     def ordenar_por(self, col, descendente):
         datos = [(self.tabla.set(k, col), k) for k in self.tabla.get_children("")]
