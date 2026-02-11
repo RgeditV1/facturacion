@@ -7,6 +7,7 @@ __pycache__/
 *.so
 
 src/app/modulos/core/data
+*.json
 
 # Distribution / packaging
 .Python

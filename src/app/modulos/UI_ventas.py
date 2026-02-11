@@ -28,6 +28,11 @@ class UIVentas:
         self.header = ctk.CTkFrame(self.frame)
         self.header.pack(padx=(0,1), pady =(1,1),fill="both", expand=False,)
         
+        header_frame = ctk.CTkFrame(self.header, height=50, fg_color="#2c3e50")
+        header_frame.pack(fill="x", padx=10, pady=10)
+        header_label = ctk.CTkLabel(header_frame, text="Ventas", font=("Arial", 24), text_color="white")
+        header_label.pack(pady=(2,2))
+
         # Crear entrada de búsqueda
         self.frame_busqueda = ctk.CTkFrame(self.header)
         self.frame_busqueda.pack(fill="x", padx=1, pady=(0, 1))

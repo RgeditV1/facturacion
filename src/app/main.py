@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from modulos.UI_ventas import UIVentas
+from modulos.UI_inventario import UIInventario
 
 class MainWindow(ctk.CTk):
     def __init__(self):
@@ -26,7 +27,7 @@ class MainWindow(ctk.CTk):
         # Lista de tuplas: (nombre, módulo/clase o None)
         pestañas_config = [
             ("Ventas", UIVentas),
-            ("Inventario", None),  # Cambiar None por tu clase cuando la tengas
+            ("Inventario", UIInventario),  # Cambiar None por tu clase cuando la tengas
             ("Productos", None),
             ("Corte", None),
             ("Reportes", None),
