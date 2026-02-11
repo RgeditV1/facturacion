@@ -1,92 +1,164 @@
+# main_window.py
 import customtkinter as ctk
+from tkinter import messagebox
+from CTkMessagebox import CTkMessagebox
 from modulos.UI_ventas import UIVentas
 from modulos.UI_inventario import UIInventario
 
 class MainWindow(ctk.CTk):
+    """
+    Ventana principal simplificada:
+    - Uso exclusivo de pack.
+    - Pestañas instanciadas perezosamente.
+    - Botón 'Salir' fijo abajo.
+    - Emojis como iconos de texto en botones del menú.
+    """
+
     def __init__(self):
         super().__init__()
         self.title("Sistema De Facturacion E Inventario A&L")
         self.geometry("1000x600")
         self.resizable(False, False)
-        self.draw_ui()
 
-    def draw_ui(self):
-        root = ctk.CTkFrame(self, fg_color="transparent")
-        root.pack(pady=2, padx=2, fill="both", expand=True)
+        # Estructuras
+        self._frames = {}        # frame por pestaña
+        self._instances = {}     # instancia del módulo por pestaña
+        self._buttons = {}       # botones del menú
+        self._active = None
 
-        menu_frame = ctk.CTkFrame(root, border_width=1, border_color="gray")
-        menu_frame.pack(side="left", fill="y")
-
-        content_frame = ctk.CTkFrame(root, border_width=1, border_color="gray")
-        content_frame.pack(side="right", fill="both", expand=True)
-
-        self.pestañas = {}
-        self.botones = {}
-        self.boton_activo = None
-        
-        # Lista de tuplas: (nombre, módulo/clase o None)
-        pestañas_config = [
-            ("Ventas", UIVentas),
-            ("Inventario", UIInventario),  # Cambiar None por tu clase cuando la tengas
-            ("Productos", None),
-            ("Corte", None),
-            ("Reportes", None),
-            ("Configuracion", None),
-            ("Salir", None)
+        # Config: (nombre, clase, emoji)
+        self._tabs = [
+            ("Ventas", UIVentas, "🧾"),
+            ("Inventario", UIInventario, "📦"),
+            ("Productos", None, "📋"),
+            ("Corte", None, "✂️"),
+            ("Reportes", None, "📊"),
+            ("Configuracion", None, "⚙️"),
         ]
 
-        # Crear botones y frames dinámicamente
-        for nombre, modulo_clase in pestañas_config:
-            btn = ctk.CTkButton(
-                menu_frame,
-                text=nombre,
-                command=lambda n=nombre: self.mostrar_pestaña(n)
-            )
-            btn.pack(pady=10, padx=10, fill="x")
-            self.botones[nombre] = btn
+        self._build_ui()
+        self.show_tab("Ventas")
 
-            # Crear frame para la pestaña
-            frame = ctk.CTkFrame(content_frame)
-            self.pestañas[nombre] = frame
-            
-            # Instanciar el módulo si existe
-            if modulo_clase is not None and nombre != "Salir":
-                modulo_clase(frame)
+    # -----------------------
+    # Construcción UI
+    # -----------------------
+    def _build_ui(self):
+        root = ctk.CTkFrame(self, fg_color="transparent")
+        root.pack(fill="both", expand=True, padx=6, pady=6)
 
-        self.mostrar_pestaña("Ventas")
+        menu = ctk.CTkFrame(root, border_width=1, border_color="gray")
+        menu.pack(side="left", fill="y")
+
+        content = ctk.CTkFrame(root, border_width=1, border_color="gray")
+        content.pack(side="right", fill="both", expand=True)
+
+        self._menu = menu
+        self._content = content
+
+        # Logo
+        ctk.CTkLabel(menu, text="A&L", font=("Arial", 18, "bold")).pack(pady=(12,6), padx=8)
+
+        # Crear botones y frames (no instanciamos módulos aún)
+        for name, cls, emoji in self._tabs:
+            text = f"{emoji}  {name}"
+            btn = ctk.CTkButton(menu, text=text, width=160, anchor="w",
+                                command=lambda n=name: self.show_tab(n))
+            btn.pack(pady=6, padx=8, fill="x")
+            self._buttons[name] = btn
+
+            frame = ctk.CTkFrame(self._content, fg_color="transparent")
+            self._frames[name] = frame
+            self._instances[name] = None
+
+        # Separador
+        ctk.CTkFrame(menu, height=1, fg_color="gray").pack(fill="x", padx=8, pady=(6,6))
+
+        # Dark mode switch (above exit)
+        ctk.CTkSwitch(menu, text="🌙 Modo Oscuro", command=self._toggle_dark).pack(side="bottom", pady=(60,6), padx=8)
+
+        # Salir fijo abajo
+        btn_exit = ctk.CTkButton(menu, text="⏻  Salir", fg_color="#b22222", hover_color="#a11a1a", command=self._on_exit)
+        btn_exit.pack(side="bottom", pady=12, padx=8, fill="x")
+        self._buttons["Salir"] = btn_exit
+
+        # Atajos
+        self.bind_all("<Control-q>", lambda e: self._on_exit())
+
+    # -----------------------
+    # Acciones globales
+    # -----------------------
+    def _toggle_dark(self):
+        ctk.set_appearance_mode("Light" if ctk.get_appearance_mode() == "Dark" else "Dark")
 
 
-        #Switch modo Oscuro
-        switch = ctk.CTkSwitch(menu_frame, text="🌙 Modo Oscuro", command=self.toggle_dark_mode)
-        switch.pack(side="bottom", pady=10, padx=10)
+    def _on_exit(self, event=None):
+        """
+        Confirmación de salida y cierre seguro de la ventana principal.
+        Acepta un event opcional para poder enlazar con bind_all.
+        """
+        # askyesno devuelve True si el usuario confirma
+        if messagebox.askyesno("Salir", "¿Deseas salir de la aplicación?"):
+            try:
+                # Primero intentamos salir del mainloop (seguro)
+                self.quit()
+            except Exception:
+                pass
+            try:
+                # Luego destruimos la ventana y todos sus widgets
+                self.destroy()
+            except Exception:
+                # En casos extremos forzamos cierre del toplevel
+                try:
+                    self.winfo_toplevel().destroy()
+                except Exception:
+                    pass
 
-
-    def toggle_dark_mode(self):
-        if ctk.get_appearance_mode() == "Dark":
-            ctk.set_appearance_mode("Light")
-        else:
-            ctk.set_appearance_mode("Dark")
-
-    def mostrar_pestaña(self, nombre):
-        if nombre == "Salir":
-            self.destroy()
+    # -----------------------
+    # Gestión de pestañas (lazy load)
+    # -----------------------
+    def show_tab(self, name):
+        # Manejo especial Salir
+        if name == "Salir":
+            self._on_exit()
             return
 
-        # Ocultar todas las pestañas
-        for frame in self.pestañas.values():
-            frame.pack_forget()
+        # Ocultar todos los frames
+        for f in self._frames.values():
+            f.pack_forget()
 
-        # Reactivar botón anterior
-        if self.boton_activo:
-            self.botones[self.boton_activo].configure(state="normal")
+        # Reactivar botón anterior y restaurar estilo
+        if self._active:
+            prev = self._buttons.get(self._active)
+            if prev:
+                prev.configure(state="normal")
+                try:
+                    prev.configure(fg_color=None, text_color=None)
+                except Exception:
+                    pass
 
-        # Mostrar pestaña actual
-        self.pestañas[nombre].pack(fill="both", expand=True)
+        # Instanciar módulo si aplica (lazy)
+        cls = {n: c for n, c, _ in self._tabs}.get(name)
+        if cls is not None and self._instances.get(name) is None:
+            try:
+                self._instances[name] = cls(self._frames[name])
+            except Exception as e:
+                CTkMessagebox(title="Error", message=f"No se pudo cargar {name}:\n{e}", icon="cancel", option_1="OK")
+                self._instances[name] = None
 
-        # Desactivar botón actual
-        self.botones[nombre].configure(state="disabled")
-        self.boton_activo = nombre
+        # Mostrar frame
+        frame = self._frames[name]
+        frame.pack(fill="both", expand=True)
 
+        # Desactivar y marcar botón actual
+        btn = self._buttons.get(name)
+        if btn:
+            btn.configure(state="disabled")
+            try:
+                btn.configure(fg_color="#2c3e50", text_color="white")
+            except Exception:
+                pass
+
+        self._active = name
 
 if __name__ == "__main__":
     app = MainWindow()

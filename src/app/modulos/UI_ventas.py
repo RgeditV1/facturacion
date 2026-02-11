@@ -3,10 +3,10 @@ import customtkinter as ctk
 class UIVentas:
     def __init__(self, frame):
         self.frame = frame
-        self.draw_ui()
+        self._draw_ui()
 
         
-    def draw_ui(self):
+    def _draw_ui(self):
         self.header()
         self.centro() 
         self.footer()
